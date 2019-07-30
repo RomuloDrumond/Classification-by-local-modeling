@@ -91,7 +91,10 @@ class LSSVM:
         k = self.kernel(self.x, X)
         
         if len(self.y_labels)==2: # binary classification
-            y_values = np.where(self.y==self.y_labels[0],-1,1)
+            y_values = np.where(
+                (self.y == self.y_labels[0]).all(axis=1),
+                -1,+1)[:,np.newaxis] # making it a column vector
+
             Y = np.sign( dot( np.multiply(self.alpha, y_values.flatten()), k ) + self.b)
             
             y_pred_labels = np.where(Y==-1,        self.y_labels[0],
@@ -100,12 +103,12 @@ class LSSVM:
         else: # multiclass classification, ONE-VS-ALL APPROACH
             Y = np.zeros((len(self.y_labels), len(X)))
             for i in range(len(self.y_labels)):
-                y_values = np.where((self.y == self.y_labels[i]).all(axis=1),
-                                         +1, -1)[:,np.newaxis] # making it a column vector
+                y_values = np.where(
+                    (self.y == self.y_labels[i]).all(axis=1),
+                    +1, -1)[:,np.newaxis] # making it a column vector
                 Y[i] = np.sign( dot( np.multiply(self.alpha[i], y_values.flatten()), k ) + self.b[i])
             
             predictions = np.argmax(Y, axis=0)
             y_pred_labels = np.array([self.y_labels[i] for i in predictions])
             
         return y_pred_labels
-        
